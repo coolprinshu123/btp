@@ -1,0 +1,16 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ShopHandler	util.py	/^class ShopHandler(osm.SimpleHandler):$/;"	c
+__init__	util.py	/^    def __init__(self):$/;"	m	class:ShopHandler
+draw	util.py	/^def draw(df, region):$/;"	f
+getLocation	util.py	/^    def getLocation(location):$/;"	m	class:ShopHandler
+get_restaurants	util.py	/^def get_restaurants(region, csv=False):$/;"	f
+is_restaurant	util.py	/^    def is_restaurant(elem):$/;"	m	class:ShopHandler
+node	util.py	/^    def node(self, n):$/;"	m	class:ShopHandler
+parse_arguments	main.py	/^def parse_arguments():$/;"	f
+shops	util.py	/^    def shops(self, elem):$/;"	m	class:ShopHandler
+to_csv	util.py	/^def to_csv(df, region):$/;"	f

@@ -24,6 +24,8 @@ rows = 17
 cols = 13
 lat_min = 28.5285736999
 lon_min = 77.0439512
+lat_max = 28.7446158
+lon_max = 77.3899722
 customer_order_file = open("customer_demands.csv", "r")
 total_customers = 0
 customer_numbers = []
@@ -34,7 +36,7 @@ for lines in customer_order_file:
 
 output_file = open("instance.csv", "w+")
 output_file.write(
-    "order_id, customer_address, rest_id, rest_lat, rest_long, rest_address, arrival_time\n")
+    "order_id,customer_address,rest_id,rest_lat,rest_long,rest_address,arrival_time\n")
 order_id = 0
 
 
@@ -180,7 +182,7 @@ def generate_instances(_lambda, _num_arrivals, rest_id, rest_lat, rest_long, tim
         for i in range(len(customer_numbers)):
             customers_now += customer_numbers[i]
             if(customers_now > customer_id):
-                customer_address = i-1
+                customer_address = i
                 break
         instance = []
         instance.append(order_id)
@@ -201,8 +203,13 @@ def generate_instances(_lambda, _num_arrivals, rest_id, rest_lat, rest_long, tim
             break
         # print it all out
         instance.append(_arrival_time*time_slot)
+        count = 0
         for items in instance:
-            output_file.write(str(items)+",")
+            count += 1
+            if(count != len(instance)):
+                output_file.write(str(items)+",")
+            else:
+                output_file.write(str(items))
         output_file.write("\n")
         order_id += 1
         print(str(p)+','+str(_inter_arrival_time)+','+str(_arrival_time))
@@ -222,6 +229,8 @@ for i in range(len(file_rest)):
     rating_val = float(file_rest.loc[i, "rating"])
     rest_lat = float(file_rest.loc[i, "lat"])
     rest_lon = float(file_rest.loc[i, "lon"])
+    if(rest_lat < lat_min or rest_lat > lat_max or rest_lon < lon_min or rest_lon > lon_max):
+        continue
     if(rating_val >= 4):
         generate_instances(avg_orders_per_quaterly_hour_level_1,
                            avg_orders_per_quaterly_hour_level_1*total_slots, i+1, rest_lat, rest_lon, time_slot)

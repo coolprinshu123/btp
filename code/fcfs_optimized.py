@@ -114,22 +114,33 @@ for i in range(len(data)):
 print(total_distance)
 
 current_order = 0
-number_drones = 1500
+number_drones = 2000
 speed_drones = 1
 free_time = [0]*number_drones
+drone_location = [recharging_points[0]]*number_drones
+arrival_time = [0]*number_drones
 while(current_order < len(data)):
     total_distance = 0
     next_free_drone = get_min(free_time)
     customer_address = int(float(data.loc[current_order, "customer_address"]))
     rest_address = int(float(data.loc[current_order, "rest_address"]))
+    for i in range(number_drones):
+        arrival_time[i] = free_time[i] - free_time[next_free_drone]
+        #add1 = index_to_points(rest_address)
+        #add2 = index_to_points(nearest_recharging_station[drone_location[i]])
+        arrival_time[i] += get_minimum_distance(
+            graph, drone_location[i], rest_address, nearest_recharging_station)
+
     #print(data.loc[i, "rest_address"])
+    next_free_drone = get_min(arrival_time)
     total_distance += get_minimum_distance(
-        graph, warehouse_number, rest_address, nearest_recharging_station)
+        graph, drone_location[next_free_drone], rest_address, nearest_recharging_station)
     total_distance += get_minimum_distance(
         graph, rest_address, customer_address, nearest_recharging_station)
     total_distance += get_minimum_distance(
-        graph, customer_address, warehouse_number, nearest_recharging_station)
+        graph, customer_address, nearest_recharging_station[customer_address], nearest_recharging_station)
     free_time[next_free_drone] += total_distance/speed_drones
+    drone_location[next_free_drone] = nearest_recharging_station[customer_address]
     current_order += 1
 
 print(max(free_time))

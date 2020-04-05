@@ -18,7 +18,7 @@ def csv_to_dictionary(fileName, is_list=0):
 customer_nodes = 221
 y = {}
 x = {}
-p = 12
+p = 10
 print(p)
 service_demand_customer = csv_to_dictionary("customer_demands.csv")
 N_k = csv_to_dictionary("n_k.csv", 1)

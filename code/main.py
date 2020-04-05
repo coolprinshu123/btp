@@ -56,7 +56,7 @@ def get_centre_to_origin_distance(centres, lat_min, long_min):
     return distance_dictionary
 
 
-def get_distance_between_grids(x1, y1, x2, y2, sector_distance):
+def get_distance_between_grids(x1, y1, x2, y2, sector_distance=2):
     length = (x2 - x1) * sector_distance
     breadth = (y2 - y1) * sector_distance
     return math.sqrt(length ** 2 + breadth**2)

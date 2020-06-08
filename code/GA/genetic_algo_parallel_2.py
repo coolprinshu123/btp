@@ -134,8 +134,8 @@ class gene:
         x = index - (cols * y)
         return [x, y]
     def fitness(self, drone_id, orders_list):
-        total_distance = 0
         for order in orders_list:
+            total_distance = 0
             customer_address = int(float(self.data.loc[self.data['order_id'] == order, "customer_address"]))
             rest_address = int(float(self.data.loc[self.data['order_id'] == order, "rest_address"]))
             total_distance += self.get_minimum_distance(

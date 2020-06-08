@@ -20,8 +20,8 @@ class gene:
     warehouse_number = 122
     data = None
     fitness_value = None
-    speed_drones = 1
-    number_drones = 1000
+    speed_drones = 50
+    number_drones = 100000
 
     @classmethod
     def index_to_points(cls, index, rows=17, cols=13):
@@ -108,9 +108,9 @@ class gene:
         if not cls.data:
             data = pd.read_csv("../instance.csv")
             cls.data = data
-            print(data.columns)
+            #print(data.columns)
             data = data.sort_values(by=['arrival_time'], ascending=True)
-            print(data)
+            #print(data)
             warehouse_number = cls.warehouse_number
             total_distance = 0
 
@@ -135,9 +135,9 @@ class gene:
         return [x, y]
 
     def fitness(self):
-        total_distance = 0
         max_distance = 0
         for drone_id, orders_list in self.drone_order_alloc.items():
+            total_distance = 0
             for order in orders_list:
                 customer_address = int(float(self.data.loc[self.data['order_id'] == order, "customer_address"]))
                 rest_address = int(float(self.data.loc[self.data['order_id'] == order, "rest_address"]))
@@ -209,7 +209,7 @@ class genetic_algo:
         return offspring_object
     def crossover_util(self, parents):
         offspring_list = []
-        pool= multiprocessing.Pool(processes = 4)
+        pool= multiprocessing.Pool()
         result = pool.starmap(self.crossover, [(k,parents) for k in range(int((self.number_population*(self.number_population-1))/2))])
         return result
     def mutation(self, offspring):

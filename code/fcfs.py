@@ -114,7 +114,7 @@ for i in range(len(data)):
 print(total_distance)
 
 current_order = 0
-number_drones = 1500
+number_drones = 100
 speed_drones = 1
 free_time = [0]*number_drones
 while(current_order < len(data)):

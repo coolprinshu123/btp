@@ -18,7 +18,7 @@ def csv_to_dictionary(fileName, is_list=0):
 customer_nodes = 221
 y = {}
 x = {}
-p = 12
+p = 9
 print(p)
 service_demand_customer = csv_to_dictionary("customer_demands.csv")
 N_k = csv_to_dictionary("n_k.csv", 1)
@@ -52,8 +52,7 @@ for i in range(customer_nodes):
         solver.Add((solver.Sum([z[(i, j)] for j in omega[i] if i != j]) -
                     solver.Sum([z[(j, i)] for j in omega[i] if i != j])) <= x[i] - m)
 
-solver.Maximize(solver.Sum([service_demand_customer[i] * y[i]
-                            for i in range(customer_nodes)]))
+solver.Maximize(solver.Sum([service_demand_customer[i] * y[i] for i in range(customer_nodes)]))
 sol = solver.Solve()
 recharging_points = []
 recharging_points.append(warehouse_no)

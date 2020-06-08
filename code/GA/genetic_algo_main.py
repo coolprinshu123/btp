@@ -134,9 +134,9 @@ class gene:
         return [x, y]
 
     def fitness(self):
-        total_distance = 0
         max_distance = 0
         for drone_id, orders_list in self.drone_order_alloc.items():
+            total_distance = 0
             for order in orders_list:
                 customer_address = int(float(self.data.loc[self.data['order_id'] == order, "customer_address"]))
                 rest_address = int(float(self.data.loc[self.data['order_id'] == order, "rest_address"]))

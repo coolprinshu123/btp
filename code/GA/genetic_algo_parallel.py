@@ -209,7 +209,7 @@ class genetic_algo:
         return offspring_object
     def crossover_util(self, parents):
         offspring_list = []
-        pool= multiprocessing.Pool(processes = 4)
+        pool= multiprocessing.Pool()
         result = pool.starmap(self.crossover, [(k,parents) for k in range(int((self.number_population*(self.number_population-1))/2))])
         return result
     def mutation(self, offspring):

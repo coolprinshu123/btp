@@ -5,9 +5,6 @@ import math
 import random
 from copy import deepcopy
 class gene:
-    order_drone_alloc = None
-    fitness = 0
-    drone_order_alloc = None
     fp = 8
     fd = 5
     rows = 17
@@ -18,7 +15,6 @@ class gene:
     nearest_recharging_station = None
     warehouse_number = 122
     data = None
-    fitness_value = None
     speed_drones = 1
     number_drones = 20
 
@@ -112,6 +108,10 @@ class gene:
             #print(data)
             warehouse_number = cls.warehouse_number
             total_distance = 0
+    def __init__(self):
+        self.order_drone_alloc = None
+        fitness_value = None
+        self.drone_order_alloc = None
 
     def get_minimum_distance(self, graph, start, end, nearest_dictionary):
         recharging1 = nearest_dictionary[start]

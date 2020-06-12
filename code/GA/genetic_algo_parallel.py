@@ -4,11 +4,12 @@ from main import get_distance_between_grids
 import math
 import random
 import multiprocessing
+from copy import deepcopy
 
 class gene:
-    order_drone_alloc = {}
+    order_drone_alloc = None
     fitness = 0
-    drone_order_alloc = {}
+    drone_order_alloc = None
     fp = 8
     fd = 5
     rows = 17
@@ -20,8 +21,8 @@ class gene:
     warehouse_number = 122
     data = None
     fitness_value = None
-    speed_drones = 50
-    number_drones = 100000
+    speed_drones = 1
+    number_drones = 1000
 
     @classmethod
     def index_to_points(cls, index, rows=17, cols=13):
@@ -109,10 +110,8 @@ class gene:
             data = pd.read_csv("../instance.csv")
             cls.data = data
             #print(data.columns)
-            data = data.sort_values(by=['arrival_time'], ascending=True)
+            cls.data = data.sort_values(by=['arrival_time'], ascending=True)
             #print(data)
-            warehouse_number = cls.warehouse_number
-            total_distance = 0
 
     def get_minimum_distance(self, graph, start, end, nearest_dictionary):
         recharging1 = nearest_dictionary[start]
@@ -152,14 +151,17 @@ class gene:
         self.fitness_value = float(max_distance/self.speed_drones)
 
     def convert_drone_order(self):
+        self.drone_order_alloc = {}
         for order_id, drone_id in self.order_drone_alloc.items():
             if drone_id in self.drone_order_alloc.keys():
                 self.drone_order_alloc[drone_id].append(order_id)
             else:
-                self.drone_order_alloc[drone_id] = [order_id]
+                order_list = [order_id]
+                self.drone_order_alloc[drone_id] = order_list
         self.fitness()
 
     def allocate_random_orders(self):
+        self.order_drone_alloc = {}
         for orderId in list(self.data['order_id']):
             self.order_drone_alloc[orderId] = random.randint(0,self.number_drones)
         self.convert_drone_order()
@@ -172,55 +174,61 @@ class gene:
 class genetic_algo:
     number_generation = 5
     current_population = []
-    #new_generation = []
-    number_population = 3
-    crossover_percent = 0.3
+    # new_generation = []
+    number_population = 10
+    crossover_percent = 0.4
+    crossover_probability = 1
     mutation_probability = 0.01
+
     def selection(self):
-        self.current_population.sort(key=lambda x:x.fitness_value, reverse=False)
-        return self.current_population[0:len(self.current_population)]
+        self.current_population.sort(key=lambda x: x.fitness_value, reverse=False)
+        return self.current_population[0:int(len(self.current_population) * self.crossover_percent)]
 
     def crossover(self,k, parents):
         parent1_idx = k % (len(parents))
         parent2_idx = (k+1) % (len(parents))
-        parent1 = parents[parent1_idx]
-        parent2 = parents[parent2_idx]
-        mid = random.randint(0, len(parents[0].order_drone_alloc.keys()))
-        offspring = {}
-        count = 0
-        for k,v in parent1.order_drone_alloc.items():
-            if count == mid:
-                break
-            else :
-                count+=1
-                offspring[k] = v
-        count = 0
-        for k, v in parent2.order_drone_alloc.items():
-            if count < mid:
-                count+=1
-                continue
-            else:
-                count += 1
-                offspring[k] = v
-        offspring = self.mutation(offspring)
-        offspring_object = gene()
-        offspring_object.allocate_orders(offspring)
-        print(k)
+        parent1 = deepcopy(parents[parent1_idx])
+        parent2 = deepcopy(parents[parent2_idx])
+        random_no = random.random()
+        offspring_object = None
+        if random_no < self.crossover_probability:
+            mid = random.randint(0, len(parents[0].order_drone_alloc.keys()))
+            offspring = {}
+            count = 0
+            for k,v in parent1.order_drone_alloc.items():
+                if count == mid:
+                    break
+                else :
+                    count+=1
+                    offspring[k] = v
+            count = 0
+            for k, v in parent2.order_drone_alloc.items():
+                if count < mid:
+                    count+=1
+                    continue
+                else:
+                    count += 1
+                    offspring[k] = v
+            offspring = self.mutation(offspring)
+            offspring_object = gene()
+            offspring_object.allocate_orders(offspring)
+        else:
+            offspring_object = parent1
         return offspring_object
     def crossover_util(self, parents):
-        offspring_list = []
+        #offspring_list = []
         pool= multiprocessing.Pool()
-        result = pool.starmap(self.crossover, [(k,parents) for k in range(int((self.number_population*(self.number_population-1))/2))])
+        result = pool.starmap(self.crossover, [(k,parents) for k in range(self.number_population)])
         return result
     def mutation(self, offspring):
-        if (random.random() <= self.mutation_probability):
-            key = random.choice(offspring.keys())
-            offspring[key] = random.choice(offspring.values())
+        if random.random() <= self.mutation_probability:
+            key = random.choice(list(offspring.keys()))
+            offspring[key] = random.choice(list(offspring.values()))
         return offspring
 
     def initialize_population(self):
         for i in range(self.number_population):
-            print(i)
+            print("Initialising Population : ", i)
             chromosome = gene()
             chromosome.allocate_random_orders()
             self.current_population.append(chromosome)
@@ -228,16 +236,19 @@ class genetic_algo:
     def runGA(self):
         gene.Init()
         self.initialize_population()
-        for _ in range(self.number_generation):
-            print("Iteration")
+        for i in range(self.number_generation):
+            print("Generation : ", i)
             selected_parents = self.selection()
-            print("Selection Done.")
-            self.current_population = self.crossover_util(selected_parents)
+            #print("Fitness Value : ", selected_parents[0].fitness_value )
+            self.current_population.sort(key=lambda x: x.fitness_value, reverse=False)
+            print("Running time in minutes : ", self.current_population[0].fitness_value)
+            self.current_population = deepcopy(self.crossover_util(selected_parents))
         self.current_population.sort(key=lambda x: x.fitness_value, reverse=False)
-        print(self.current_population[0].fitness_value)
+        print("Running time in minutes : ", self.current_population[0].fitness_value)
+
 
 if __name__ == "__main__":
     genetic_algo_obj = genetic_algo()
     genetic_algo_obj.runGA()
-    print("Result : ")
+    print("Completed GA.")
 

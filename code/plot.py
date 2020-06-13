@@ -33,8 +33,11 @@ if __name__ == '__main__':
     plt.xlabel("Number of drones")
     plt.ylabel("Time taken in hrs")
     y1 = [7066/60, 1482/60, 788/60, 555/60, 444/60, 320/60, 210/60]
+    y2 = [5120/60, 980/60, 476/60, 252/60, 97/60, 58/60, 33/60]
     # plt.plot(x,y)
     plt.plot(x, y, 'r-')
     plt.plot(x, y1, 'b-')
+    plt.plot(x,y2,'g-')
+    plt.legend(['FCFS_optimised','FCFS','GA'])
     plt.show()
     plt.savefig("recharging_points.png")

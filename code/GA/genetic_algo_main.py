@@ -16,7 +16,7 @@ class gene:
     warehouse_number = 122
     data = None
     speed_drones = 1
-    number_drones = 20
+    number_drones = 15
 
     @classmethod
     def index_to_points(cls, index, rows=17, cols=13):
@@ -110,7 +110,7 @@ class gene:
             total_distance = 0
     def __init__(self):
         self.order_drone_alloc = None
-        fitness_value = None
+        self.fitness_value = None
         self.drone_order_alloc = None
 
     def get_minimum_distance(self, graph, start, end, nearest_dictionary):
@@ -132,20 +132,33 @@ class gene:
         y = math.floor(index / cols)
         x = index - (cols * y)
         return [x, y]
+    def get_nearest_node(self, current_node_id, nodes_list):
+        min_distance = 1000000000
+        nearest_node = None
+        for next_node in nodes_list:
+            total_distance = 0
+            customer_address = int(float(self.data.loc[self.data['order_id'] == next_node, "customer_address"]))
+            rest_address = int(float(self.data.loc[self.data['order_id'] == next_node, "rest_address"]))
+            total_distance += self.get_minimum_distance(
+                self.graph, current_node_id, rest_address, self.nearest_recharging_station)
+            total_distance += self.get_minimum_distance(
+                self.graph, rest_address, customer_address, self.nearest_recharging_station)
+            if total_distance < min_distance:
+                min_distance = total_distance
+                nearest_node = next_node
+        return nearest_node, min_distance
 
     def fitness(self):
         max_distance = 0
         for drone_id, orders_list in self.drone_order_alloc.items():
             total_distance = 0
-            for order in orders_list:
-                customer_address = int(float(self.data.loc[self.data['order_id'] == order, "customer_address"]))
-                rest_address = int(float(self.data.loc[self.data['order_id'] == order, "rest_address"]))
-                total_distance += self.get_minimum_distance(
-                    self.graph, self.warehouse_number, rest_address, self.nearest_recharging_station)
-                total_distance += self.get_minimum_distance(
-                    self.graph, rest_address, customer_address, self.nearest_recharging_station)
-                total_distance += self.get_minimum_distance(
-                    self.graph, customer_address, self.warehouse_number, self.nearest_recharging_station)
+            remaining_orders = deepcopy(orders_list)
+            current_node = self.warehouse_number
+            while len(remaining_orders) != 0:
+                current_node, min_distance = self.get_nearest_node(current_node, remaining_orders)
+                remaining_orders.remove(current_node)
+                current_node = int(float(self.data.loc[self.data['order_id'] == current_node, "customer_address"]))
+                total_distance+=min_distance
             if total_distance > max_distance:
                 max_distance = total_distance
         self.fitness_value = float(max_distance/self.speed_drones)
@@ -164,7 +177,7 @@ class gene:
     def allocate_random_orders(self):
         self.order_drone_alloc = {}
         for orderId in list(self.data['order_id']):
-            self.order_drone_alloc[orderId] = random.randint(0,self.number_drones-1)
+            self.order_drone_alloc[orderId] = random.randint(0, self.number_drones-1)
         self.convert_drone_order()
 
     def allocate_orders(self, order_drone_dict):
@@ -176,9 +189,9 @@ class genetic_algo:
     number_generation = 15
     current_population = []
     #new_generation = []
-    number_population = 10
-    crossover_percent = 0.4
-    crossover_probability = 1
+    number_population = 40
+    crossover_percent = 1
+    crossover_probability = 0.7
     mutation_probability = 0.01
 
     def selection(self):
@@ -187,9 +200,13 @@ class genetic_algo:
 
     def crossover(self, parents):
         offspring_list = []
+        k_prime = 0
         for k_dash in range(self.number_population):
+            if k_dash%len(parents) == 0:
+                k_prime+=1
+            #print("K_prime : ",k_prime)
             parent1_idx = k_dash % (len(parents))
-            parent2_idx = (k_dash+1) % (len(parents))
+            parent2_idx = (k_dash+k_prime) % (len(parents))
             random_no = random.random()
             parent1 = deepcopy(parents[parent1_idx])
             parent2 = deepcopy(parents[parent2_idx])
@@ -243,8 +260,8 @@ class genetic_algo:
             selected_parents_copy = deepcopy(selected_parents)
             print("length population : ",len(self.current_population ))
             print("Fitness Value : ", selected_parents[0].fitness_value)
-            self.current_population[0].order_drone_alloc[0] = 0
-            self.current_population[1].order_drone_alloc[0] = 1
+            # # self.current_population[0].order_drone_alloc[0] = 0
+            # # self.current_population[1].order_drone_alloc[0] = 1
             # print(self.current_population[0].order_drone_alloc)
             # print(self.current_population[1].order_drone_alloc)
             # print(self.current_population[2].order_drone_alloc)

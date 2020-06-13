@@ -255,10 +255,9 @@ class genetic_algo:
         gene.Init()
         self.initialize_population()
         for _ in range(self.number_generation):
-            print("Iteration")
             selected_parents = self.selection()
             selected_parents_copy = deepcopy(selected_parents)
-            print("length population : ",len(self.current_population ))
+            #print("length population : ",len(self.current_population ))
             print("Fitness Value : ", selected_parents[0].fitness_value)
             # # self.current_population[0].order_drone_alloc[0] = 0
             # # self.current_population[1].order_drone_alloc[0] = 1
@@ -266,12 +265,12 @@ class genetic_algo:
             # print(self.current_population[1].order_drone_alloc)
             # print(self.current_population[2].order_drone_alloc)
             # print(self.current_population[-1].order_drone_alloc)
-            for i in range(self.number_population):
-                print(self.current_population[i].order_drone_alloc)
-            print(" ")
-            for i in range(self.number_population):
-                print(self.current_population[i].drone_order_alloc)
-            print(" ")
+            # for i in range(self.number_population):
+            #     print(self.current_population[i].order_drone_alloc)
+            # print(" ")
+            # for i in range(self.number_population):
+            #     print(self.current_population[i].drone_order_alloc)
+            # print(" ")
             self.current_population = self.crossover(selected_parents_copy)
         self.current_population.sort(key=lambda x: x.fitness_value, reverse=False)
         print(self.current_population[0].fitness_value)

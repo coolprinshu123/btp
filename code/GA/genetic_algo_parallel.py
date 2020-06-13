@@ -18,7 +18,7 @@ class gene:
     warehouse_number = 122
     data = None
     speed_drones = 1
-    number_drones = 15
+    number_drones = 3000
 
     @classmethod
     def index_to_points(cls, index, rows=17, cols=13):
@@ -189,10 +189,10 @@ class gene:
         self.convert_drone_order()
 
 class genetic_algo:
-    number_generation = 15
+    number_generation = 1000
     current_population = []
     #new_generation = []
-    number_population = 40
+    number_population = 100
     crossover_percent = 1
     crossover_probability = 0.7
     mutation_probability = 0.01
@@ -256,10 +256,10 @@ class genetic_algo:
         gene.Init()
         self.initialize_population()
         for _ in range(self.number_generation):
-            print("Iteration")
+            #print("Iteration")
             selected_parents = self.selection()
             selected_parents_copy = deepcopy(selected_parents)
-            print("length population : ",len(self.current_population ))
+            #print("length population : ",len(self.current_population ))
             print("Fitness Value : ", selected_parents[0].fitness_value)
             # # self.current_population[0].order_drone_alloc[0] = 0
             # # self.current_population[1].order_drone_alloc[0] = 1
@@ -267,12 +267,12 @@ class genetic_algo:
             # print(self.current_population[1].order_drone_alloc)
             # print(self.current_population[2].order_drone_alloc)
             # print(self.current_population[-1].order_drone_alloc)
-            for i in range(self.number_population):
-                print(self.current_population[i].order_drone_alloc)
-            print(" ")
-            for i in range(self.number_population):
-                print(self.current_population[i].drone_order_alloc)
-            print(" ")
+            # for i in range(self.number_population):
+            #     print(self.current_population[i].order_drone_alloc)
+            # print(" ")
+            # for i in range(self.number_population):
+            #     print(self.current_population[i].drone_order_alloc)
+            # print(" ")
             self.current_population = self.crossover_util(selected_parents_copy)
         self.current_population.sort(key=lambda x: x.fitness_value, reverse=False)
         print(self.current_population[0].fitness_value)

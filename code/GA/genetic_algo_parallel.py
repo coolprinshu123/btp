@@ -3,12 +3,10 @@ import pandas as pd
 from main import get_distance_between_grids
 import math
 import random
+from copy import deepcopy
 import multiprocessing
 
 class gene:
-    order_drone_alloc = {}
-    fitness = 0
-    drone_order_alloc = {}
     fp = 8
     fd = 5
     rows = 17
@@ -19,9 +17,8 @@ class gene:
     nearest_recharging_station = None
     warehouse_number = 122
     data = None
-    fitness_value = None
-    speed_drones = 50
-    number_drones = 100000
+    speed_drones = 1
+    number_drones = 15
 
     @classmethod
     def index_to_points(cls, index, rows=17, cols=13):
@@ -55,7 +52,7 @@ class gene:
     def get_nearest_recharging_station(cls, recharging_points, cust_nodes):
         nearest_dictionary = {}
         for cust_address in cust_nodes:
-            min_distance = 1000
+            min_distance = 10000000
             nearest_node = recharging_points[0]
             flag = 0
             for points in recharging_points:
@@ -108,11 +105,16 @@ class gene:
         if not cls.data:
             data = pd.read_csv("../instance.csv")
             cls.data = data
-            #print(data.columns)
+            # print(data.columns)
             data = data.sort_values(by=['arrival_time'], ascending=True)
-            #print(data)
+            # print(data)
             warehouse_number = cls.warehouse_number
             total_distance = 0
+
+    def __init__(self):
+        self.order_drone_alloc = None
+        self.fitness_value = None
+        self.drone_order_alloc = None
 
     def get_minimum_distance(self, graph, start, end, nearest_dictionary):
         recharging1 = nearest_dictionary[start]
@@ -134,88 +136,113 @@ class gene:
         x = index - (cols * y)
         return [x, y]
 
+    def get_nearest_node(self, current_node_id, nodes_list):
+        min_distance = 1000000000
+        nearest_node = None
+        for next_node in nodes_list:
+            total_distance = 0
+            customer_address = int(float(self.data.loc[self.data['order_id'] == next_node, "customer_address"]))
+            rest_address = int(float(self.data.loc[self.data['order_id'] == next_node, "rest_address"]))
+            total_distance += self.get_minimum_distance(
+                self.graph, current_node_id, rest_address, self.nearest_recharging_station)
+            total_distance += self.get_minimum_distance(
+                self.graph, rest_address, customer_address, self.nearest_recharging_station)
+            if total_distance < min_distance:
+                min_distance = total_distance
+                nearest_node = next_node
+        return nearest_node, min_distance
+
     def fitness(self):
         max_distance = 0
         for drone_id, orders_list in self.drone_order_alloc.items():
             total_distance = 0
-            for order in orders_list:
-                customer_address = int(float(self.data.loc[self.data['order_id'] == order, "customer_address"]))
-                rest_address = int(float(self.data.loc[self.data['order_id'] == order, "rest_address"]))
-                total_distance += self.get_minimum_distance(
-                    self.graph, self.warehouse_number, rest_address, self.nearest_recharging_station)
-                total_distance += self.get_minimum_distance(
-                    self.graph, rest_address, customer_address, self.nearest_recharging_station)
-                total_distance += self.get_minimum_distance(
-                    self.graph, customer_address, self.warehouse_number, self.nearest_recharging_station)
+            remaining_orders = deepcopy(orders_list)
+            current_node = self.warehouse_number
+            while len(remaining_orders) != 0:
+                current_node, min_distance = self.get_nearest_node(current_node, remaining_orders)
+                remaining_orders.remove(current_node)
+                current_node = int(float(self.data.loc[self.data['order_id'] == current_node, "customer_address"]))
+                total_distance+=min_distance
             if total_distance > max_distance:
                 max_distance = total_distance
         self.fitness_value = float(max_distance/self.speed_drones)
 
     def convert_drone_order(self):
+        self.drone_order_alloc = {}
         for order_id, drone_id in self.order_drone_alloc.items():
             if drone_id in self.drone_order_alloc.keys():
                 self.drone_order_alloc[drone_id].append(order_id)
             else:
-                self.drone_order_alloc[drone_id] = [order_id]
+                order_list = []
+                order_list.append(order_id)
+                self.drone_order_alloc[drone_id] = order_list
         self.fitness()
 
     def allocate_random_orders(self):
+        self.order_drone_alloc = {}
         for orderId in list(self.data['order_id']):
-            self.order_drone_alloc[orderId] = random.randint(0,self.number_drones)
+            self.order_drone_alloc[orderId] = random.randint(0, self.number_drones - 1)
         self.convert_drone_order()
 
     def allocate_orders(self, order_drone_dict):
-        self.order_drone_alloc = order_drone_dict
+        self.order_drone_alloc = deepcopy(order_drone_dict)
         self.convert_drone_order()
-        
 
 class genetic_algo:
-    number_generation = 5
+    number_generation = 15
     current_population = []
     #new_generation = []
-    number_population = 3
-    crossover_percent = 0.3
+    number_population = 40
+    crossover_percent = 1
+    crossover_probability = 0.7
     mutation_probability = 0.01
+
     def selection(self):
         self.current_population.sort(key=lambda x:x.fitness_value, reverse=False)
-        return self.current_population[0:len(self.current_population)]
+        return self.current_population[0:int(len(self.current_population)*self.crossover_percent)]
 
-    def crossover(self,k, parents):
-        parent1_idx = k % (len(parents))
-        parent2_idx = (k+1) % (len(parents))
-        parent1 = parents[parent1_idx]
-        parent2 = parents[parent2_idx]
-        mid = random.randint(0, len(parents[0].order_drone_alloc.keys()))
-        offspring = {}
-        count = 0
-        for k,v in parent1.order_drone_alloc.items():
-            if count == mid:
-                break
-            else :
-                count+=1
-                offspring[k] = v
-        count = 0
-        for k, v in parent2.order_drone_alloc.items():
-            if count < mid:
-                count+=1
-                continue
-            else:
-                count += 1
-                offspring[k] = v
-        offspring = self.mutation(offspring)
-        offspring_object = gene()
-        offspring_object.allocate_orders(offspring)
-        print(k)
+    def crossover(self,k_dash,k_prime, parents):
+        parent1_idx = k_dash % (len(parents))
+        parent2_idx = (k_dash + k_prime) % (len(parents))
+        random_no = random.random()
+        parent1 = deepcopy(parents[parent1_idx])
+        parent2 = deepcopy(parents[parent2_idx])
+        offspring_object = None
+        if random_no < self.crossover_probability:
+            offspring = {}
+            # mid = random.randint(0, len(parents[0].order_drone_alloc.keys()))
+            mid = int(len(parents[0].order_drone_alloc.keys()) / 2)
+            count = 0
+            for k, v in parent1.order_drone_alloc.items():
+                if count == mid:
+                    break
+                else:
+                    count += 1
+                    offspring[k] = v
+            count = 0
+            for k, v in parent2.order_drone_alloc.items():
+                if count < mid:
+                    count += 1
+                    continue
+                else:
+                    count += 1
+                    offspring[k] = v
+            offspring = self.mutation(offspring)
+            offspring_object = gene()
+            offspring_object.allocate_orders(offspring)
+        else:
+            offspring_object = parent1
         return offspring_object
     def crossover_util(self, parents):
-        offspring_list = []
+        #offspring_list = []
         pool= multiprocessing.Pool()
-        result = pool.starmap(self.crossover, [(k,parents) for k in range(int((self.number_population*(self.number_population-1))/2))])
+        result = pool.starmap(self.crossover, [(k_dash,math.floor(k_dash/len(parents))+1,parents) for k_dash in range(self.number_population)])
         return result
+
     def mutation(self, offspring):
         if (random.random() <= self.mutation_probability):
-            key = random.choice(offspring.keys())
-            offspring[key] = random.choice(offspring.values())
+            key = random.choice(list(offspring.keys()))
+            offspring[key] = random.choice(list(offspring.values()))
         return offspring
 
     def initialize_population(self):
@@ -231,13 +258,27 @@ class genetic_algo:
         for _ in range(self.number_generation):
             print("Iteration")
             selected_parents = self.selection()
-            print("Selection Done.")
-            self.current_population = self.crossover_util(selected_parents)
+            selected_parents_copy = deepcopy(selected_parents)
+            print("length population : ",len(self.current_population ))
+            print("Fitness Value : ", selected_parents[0].fitness_value)
+            # # self.current_population[0].order_drone_alloc[0] = 0
+            # # self.current_population[1].order_drone_alloc[0] = 1
+            # print(self.current_population[0].order_drone_alloc)
+            # print(self.current_population[1].order_drone_alloc)
+            # print(self.current_population[2].order_drone_alloc)
+            # print(self.current_population[-1].order_drone_alloc)
+            for i in range(self.number_population):
+                print(self.current_population[i].order_drone_alloc)
+            print(" ")
+            for i in range(self.number_population):
+                print(self.current_population[i].drone_order_alloc)
+            print(" ")
+            self.current_population = self.crossover_util(selected_parents_copy)
         self.current_population.sort(key=lambda x: x.fitness_value, reverse=False)
         print(self.current_population[0].fitness_value)
+
 
 if __name__ == "__main__":
     genetic_algo_obj = genetic_algo()
     genetic_algo_obj.runGA()
     print("Result : ")
-

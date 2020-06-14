@@ -36,7 +36,7 @@ def construct_graph_recharging_points(recharging_points, graph):
 def get_nearest_recharging_station(recharging_points, cust_nodes):
     nearest_dictionary = {}
     for cust_address in cust_nodes:
-        min_distance = 1000
+        min_distance = 100000000000
         nearest_node = recharging_points[0]
         flag = 0
         for points in recharging_points:
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     print(total_distance)
 
     current_order = 0
-    number_drones = 100
+    number_drones = 3000
     speed_drones = 1
     free_time = [0]*number_drones
     drone_location = [recharging_points[0]]*number_drones

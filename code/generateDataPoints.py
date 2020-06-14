@@ -224,7 +224,7 @@ time_slot = 15
 #num_orders_level_2 = poisson.rvs(mean_level_2, size=num_rest_level_2)
 #num_orders_level_3 = poisson.rvs(mean_level_3, size=num_rest_level_3)
 file_rest = pd.read_csv("zomato.csv")
-#file_rest = file_rest.head(1000)
+file_rest = file_rest.head(1000)
 print(file_rest.columns)
 for i in range(len(file_rest)):
     rating_val = float(file_rest.loc[i, "rating"])

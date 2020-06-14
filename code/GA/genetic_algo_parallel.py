@@ -18,7 +18,7 @@ class gene:
     warehouse_number = 122
     data = None
     speed_drones = 1
-    number_drones = 3000
+    number_drones = 1000
 
     @classmethod
     def index_to_points(cls, index, rows=17, cols=13):
@@ -192,9 +192,9 @@ class genetic_algo:
     number_generation = 1000
     current_population = []
     #new_generation = []
-    number_population = 100
-    crossover_percent = 1
-    crossover_probability = 0.7
+    number_population = 60
+    crossover_percent = 0.4
+    crossover_probability = 1
     mutation_probability = 0.01
 
     def selection(self):
